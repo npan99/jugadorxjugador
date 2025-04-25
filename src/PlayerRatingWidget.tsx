@@ -66,16 +66,11 @@ export default function PlayerRatingWidget() {
   }, [selectedMatchId]);
 
   const handleRate = (playerId, value) => {
-    setRatings({ ...ratings, [playerId]: value });
-  };
-
-  const submitVotes = () => {
+    setRatings((prev) => ({ ...prev, [playerId]: value }));
     const matchId = selectedMatch?.id;
-    if (matchId && Object.keys(ratings).length > 0) {
+    if (matchId) {
       const votesRef = ref(database, `votes/${matchId}`);
-      push(votesRef, { ratings });
-      alert('¡Gracias por votar!');
-      setRatings({});
+      push(votesRef, { ratings: { [playerId]: value } });
     }
   };
 
@@ -119,7 +114,7 @@ export default function PlayerRatingWidget() {
       {
         label: 'Promedio',
         data: players.map(p => parseFloat(getAverage(p.id)) || 0),
-        backgroundColor: '#4caf50'
+        backgroundColor: players.map(p => getColor(parseFloat(getAverage(p.id)) || 0))
       }
     ]
   };
@@ -181,7 +176,6 @@ export default function PlayerRatingWidget() {
                   </div>
                 );
               })}
-              <button onClick={submitVotes} style={{ marginTop: 16, width: '100%', backgroundColor: '#c00', color: 'white', padding: 10, border: 'none', borderRadius: 4 }}>Enviar Votación</button>
               {getRanking().length > 0 && (
                 <div style={{ marginTop: 32 }}>
                   <h3 style={{ textAlign: 'center' }}>Ranking del Partido</h3>
@@ -234,4 +228,3 @@ export default function PlayerRatingWidget() {
     </div>
   );
 }
-
