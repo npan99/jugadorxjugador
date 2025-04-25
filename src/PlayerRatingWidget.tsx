@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, push, onValue } from 'firebase/database';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip } from 'chart.js';
 
@@ -158,7 +159,7 @@ export default function PlayerRatingWidget() {
                 const color = getColor(value);
                 const avg = getAverage(player.id);
                 return (
-                  <div key={player.id} style={{ marginBottom: 16, padding: 8, border: '1px solid #ccc', borderRadius: 4 }}>
+                  <motion.div key={player.id} layout style={{ marginBottom: 16, padding: 8, border: '1px solid #ccc', borderRadius: 4 }}>
                     <div style={{ marginBottom: 8, fontWeight: 'bold' }}>{player.name}</div>
                     <input
                       type="range"
@@ -173,22 +174,22 @@ export default function PlayerRatingWidget() {
                       <span style={{ color }}>Puntaje: {'★'.repeat(value)} {value}/10</span>
                       {avg && <span style={{ color: '#555' }}>Promedio: {avg}</span>}
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
               {getRanking().length > 0 && (
-                <div style={{ marginTop: 32 }}>
+                <motion.div layout style={{ marginTop: 32 }}>
                   <h3 style={{ textAlign: 'center' }}>Ranking del Partido</h3>
                   {getRanking().map((p, i) => (
-                    <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px dashed #ccc' }}>
+                    <motion.div layout key={p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px dashed #ccc' }}>
                       <span>{i + 1}. {p.name}</span>
                       <span style={{ fontWeight: 'bold', color: getColor(p.avg) }}>{p.avg}</span>
-                    </div>
+                    </motion.div>
                   ))}
                   <div style={{ marginTop: 24 }}>
                     <Bar data={chartData} options={chartOptions} />
                   </div>
-                </div>
+                </motion.div>
               )}
             </div>
           )}
