@@ -1,11 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, push, onValue } from 'firebase/database';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip } from 'chart.js';
-
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip);
+import { motion } from 'framer-motion';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB-r-eVWdM7wE5B2NYCemZo1Yx7waUSoeY",
@@ -48,6 +44,7 @@ export default function PlayerRatingWidget() {
   const [ratings, setRatings] = useState({});
   const [view, setView] = useState('vote');
   const [history, setHistory] = useState([]);
+  const timeoutRef = useRef(null);
 
   const selectedMatch = matches.find((m) => m.id.toString() === selectedMatchId);
 
@@ -66,27 +63,21 @@ export default function PlayerRatingWidget() {
     }
   }, [selectedMatchId]);
 
+  const delayedSubmit = (updatedRatings) => {
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      const matchId = selectedMatch?.id;
+      if (matchId) {
+        const votesRef = ref(database, `votes/${matchId}`);
+        push(votesRef, { ratings: updatedRatings });
+      }
+    }, 2000);
+  };
+
   const handleRate = (playerId, value) => {
-    setRatings((prev) => ({ ...prev, [playerId]: value }));
-    const matchId = selectedMatch?.id;
-    if (matchId) {
-      const votesRef = ref(database, `votes/${matchId}`);
-      push(votesRef, { ratings: { [playerId]: value } });
-    }
-  };
-
-  const addPlayer = () => {
-    if (newPlayer.trim()) {
-      setPlayers([...players, { id: Date.now(), name: newPlayer.trim() }]);
-      setNewPlayer('');
-    }
-  };
-
-  const addMatch = () => {
-    if (newMatch.name && newMatch.tournament) {
-      setMatches([...matches, { id: Date.now(), ...newMatch }]);
-      setNewMatch({ name: '', tournament: '' });
-    }
+    const updatedRatings = { ...ratings, [playerId]: value };
+    setRatings(updatedRatings);
+    delayedSubmit(updatedRatings);
   };
 
   const getAverage = (playerId) => {
@@ -103,36 +94,6 @@ export default function PlayerRatingWidget() {
       return isNaN(avg) ? null : { ...p, avg };
     }).filter(Boolean);
     return playerAverages.sort((a, b) => b.avg - a.avg);
-  };
-
-  const getVotesCount = () => {
-    return history.length;
-  };
-
-  const chartData = {
-    labels: players.map(p => p.name),
-    datasets: [
-      {
-        label: 'Promedio',
-        data: players.map(p => parseFloat(getAverage(p.id)) || 0),
-        backgroundColor: players.map(p => getColor(parseFloat(getAverage(p.id)) || 0))
-      }
-    ]
-  };
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        display: false
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 10
-      }
-    }
   };
 
   return (
@@ -153,7 +114,6 @@ export default function PlayerRatingWidget() {
 
           {selectedMatch && (
             <div style={{ marginTop: 16 }}>
-              <div style={{ marginBottom: 16, fontWeight: 'bold', textAlign: 'center' }}>Cantidad de votos: {getVotesCount()}</div>
               {players.map((player) => {
                 const value = ratings[player.id] || 5;
                 const color = getColor(value);
@@ -186,9 +146,6 @@ export default function PlayerRatingWidget() {
                       <span style={{ fontWeight: 'bold', color: getColor(p.avg) }}>{p.avg}</span>
                     </motion.div>
                   ))}
-                  <div style={{ marginTop: 24 }}>
-                    <Bar data={chartData} options={chartOptions} />
-                  </div>
                 </motion.div>
               )}
             </div>
