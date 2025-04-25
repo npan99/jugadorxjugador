@@ -8,3 +8,4 @@ root.render(
     <PlayerRatingWidget />
   </React.StrictMode>
 );
+ 
