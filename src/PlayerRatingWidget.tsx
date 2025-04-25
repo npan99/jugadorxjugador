@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 
 const initialPlayers = [
@@ -11,6 +10,14 @@ const initialMatches = [
   { id: 1, name: 'River vs Boca', tournament: 'Copa de la Liga' },
   { id: 2, name: 'River vs Racing', tournament: 'Liga Profesional' }
 ];
+
+const getColor = (value) => {
+  if (value >= 9) return '#4caf50'; // verde fuerte
+  if (value >= 7) return '#8bc34a'; // verde claro
+  if (value >= 5) return '#ffeb3b'; // amarillo
+  if (value >= 3) return '#ff9800'; // naranja
+  return '#f44336'; // rojo
+};
 
 export default function PlayerRatingWidget() {
   const [players, setPlayers] = useState(initialPlayers);
@@ -66,19 +73,25 @@ export default function PlayerRatingWidget() {
 
           {selectedMatch && (
             <div style={{ marginTop: 16 }}>
-              {players.map((player) => (
-                <div key={player.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, padding: 8, border: '1px solid #ccc', borderRadius: 4 }}>
-                  <span>{player.name}</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={10}
-                    value={ratings[player.id] || ''}
-                    onChange={(e) => handleRate(player.id, parseInt(e.target.value))}
-                    style={{ width: 50, textAlign: 'center' }}
-                  />
-                </div>
-              ))}
+              {players.map((player) => {
+                const value = ratings[player.id] || 5;
+                const color = getColor(value);
+                return (
+                  <div key={player.id} style={{ marginBottom: 16, padding: 8, border: '1px solid #ccc', borderRadius: 4 }}>
+                    <div style={{ marginBottom: 8 }}>{player.name}</div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={10}
+                      step={1}
+                      value={value}
+                      onChange={(e) => handleRate(player.id, parseInt(e.target.value))}
+                      style={{ width: '100%', accentColor: color }}
+                    />
+                    <div style={{ textAlign: 'right', fontSize: 14, fontWeight: 'bold', color }}>{'★'.repeat(value)} {value}/10</div>
+                  </div>
+                );
+              })}
               <button onClick={submitVotes} style={{ marginTop: 16, width: '100%', backgroundColor: '#c00', color: 'white', padding: 10, border: 'none', borderRadius: 4 }}>Enviar Votación</button>
             </div>
           )}
@@ -118,3 +131,4 @@ export default function PlayerRatingWidget() {
     </div>
   );
 }
+
