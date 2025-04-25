@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, push, onValue } from 'firebase/database';
+import { Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip } from 'chart.js';
+
+ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip);
 
 const firebaseConfig = {
   apiKey: "AIzaSyB-r-eVWdM7wE5B2NYCemZo1Yx7waUSoeY",
@@ -105,8 +109,38 @@ export default function PlayerRatingWidget() {
     return playerAverages.sort((a, b) => b.avg - a.avg);
   };
 
+  const getVotesCount = () => {
+    return history.length;
+  };
+
+  const chartData = {
+    labels: players.map(p => p.name),
+    datasets: [
+      {
+        label: 'Promedio',
+        data: players.map(p => parseFloat(getAverage(p.id)) || 0),
+        backgroundColor: '#4caf50'
+      }
+    ]
+  };
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: false
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 10
+      }
+    }
+  };
+
   return (
-    <div style={{ maxWidth: 500, margin: '0 auto', fontFamily: 'sans-serif', padding: 16 }}>
+    <div style={{ maxWidth: 600, margin: '0 auto', fontFamily: 'sans-serif', padding: 16 }}>
       <div style={{ marginBottom: 16, textAlign: 'center' }}>
         <button onClick={() => setView('vote')} style={{ marginRight: 8 }}>Votar</button>
         <button onClick={() => setView('admin')}>ABM</button>
@@ -123,6 +157,7 @@ export default function PlayerRatingWidget() {
 
           {selectedMatch && (
             <div style={{ marginTop: 16 }}>
+              <div style={{ marginBottom: 16, fontWeight: 'bold', textAlign: 'center' }}>Cantidad de votos: {getVotesCount()}</div>
               {players.map((player) => {
                 const value = ratings[player.id] || 5;
                 const color = getColor(value);
@@ -156,6 +191,9 @@ export default function PlayerRatingWidget() {
                       <span style={{ fontWeight: 'bold', color: getColor(p.avg) }}>{p.avg}</span>
                     </div>
                   ))}
+                  <div style={{ marginTop: 24 }}>
+                    <Bar data={chartData} options={chartOptions} />
+                  </div>
                 </div>
               )}
             </div>
@@ -173,26 +211,4 @@ export default function PlayerRatingWidget() {
             onChange={(e) => setNewPlayer(e.target.value)}
             style={{ width: '100%', padding: 8, marginBottom: 8 }}
           />
-          <button onClick={addPlayer} style={{ marginBottom: 16, width: '100%', backgroundColor: '#c00', color: 'white', padding: 10, border: 'none', borderRadius: 4 }}>Agregar jugador</button>
-
-          <h3>Agregar partido</h3>
-          <input
-            type="text"
-            placeholder="Nombre del partido"
-            value={newMatch.name}
-            onChange={(e) => setNewMatch({ ...newMatch, name: e.target.value })}
-            style={{ width: '100%', padding: 8, marginBottom: 8 }}
-          />
-          <input
-            type="text"
-            placeholder="Nombre del torneo"
-            value={newMatch.tournament}
-            onChange={(e) => setNewMatch({ ...newMatch, tournament: e.target.value })}
-            style={{ width: '100%', padding: 8, marginBottom: 8 }}
-          />
-          <button onClick={addMatch} style={{ width: '100%', backgroundColor: '#c00', color: 'white', padding: 10, border: 'none', borderRadius: 4 }}>Agregar partido</button>
-        </div>
-      )}
-    </div>
-  );
-}
+          <button onClick={addPlayer} style={{
