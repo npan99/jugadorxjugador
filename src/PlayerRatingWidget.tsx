@@ -211,4 +211,27 @@ export default function PlayerRatingWidget() {
             onChange={(e) => setNewPlayer(e.target.value)}
             style={{ width: '100%', padding: 8, marginBottom: 8 }}
           />
-          <button onClick={addPlayer} style={{
+          <button onClick={addPlayer} style={{ marginBottom: 16, width: '100%', backgroundColor: '#c00', color: 'white', padding: 10, border: 'none', borderRadius: 4 }}>Agregar jugador</button>
+
+          <h3>Agregar partido</h3>
+          <input
+            type="text"
+            placeholder="Nombre del partido"
+            value={newMatch.name}
+            onChange={(e) => setNewMatch({ ...newMatch, name: e.target.value })}
+            style={{ width: '100%', padding: 8, marginBottom: 8 }}
+          />
+          <input
+            type="text"
+            placeholder="Nombre del torneo"
+            value={newMatch.tournament}
+            onChange={(e) => setNewMatch({ ...newMatch, tournament: e.target.value })}
+            style={{ width: '100%', padding: 8, marginBottom: 8 }}
+          />
+          <button onClick={addMatch} style={{ width: '100%', backgroundColor: '#c00', color: 'white', padding: 10, border: 'none', borderRadius: 4 }}>Agregar partido</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
