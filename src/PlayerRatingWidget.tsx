@@ -1,4 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getDatabase, ref, push, onValue } from 'firebase/database';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB-r-eVWdM7wE5B2NYCemZo1Yx7waUSoeY",
+  authDomain: "player-rating-widget.firebaseapp.com",
+  projectId: "player-rating-widget",
+  storageBucket: "player-rating-widget.appspot.com",
+  messagingSenderId: "1063336242963",
+  appId: "1:1063336242963:web:03a14c9b7b31477c36c22f",
+  databaseURL: "https://player-rating-widget-default-rtdb.firebaseio.com/"
+};
+
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
 
 const initialPlayers = [
   { id: 1, name: 'Franco Armani' },
@@ -31,17 +46,33 @@ export default function PlayerRatingWidget() {
 
   const selectedMatch = matches.find((m) => m.id.toString() === selectedMatchId);
 
+  useEffect(() => {
+    if (selectedMatchId) {
+      const votesRef = ref(database, `votes/${selectedMatchId}`);
+      onValue(votesRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const loadedHistory = Object.values(data);
+          setHistory(loadedHistory);
+        } else {
+          setHistory([]);
+        }
+      });
+    }
+  }, [selectedMatchId]);
+
   const handleRate = (playerId, value) => {
     setRatings({ ...ratings, [playerId]: value });
   };
 
   const submitVotes = () => {
     const matchId = selectedMatch?.id;
-    const result = { matchId, ratings };
-    setHistory([...history, result]);
-    alert('¡Gracias por votar!');
-    setRatings({});
-    setSelectedMatchId('');
+    if (matchId && Object.keys(ratings).length > 0) {
+      const votesRef = ref(database, `votes/${matchId}`);
+      push(votesRef, { ratings });
+      alert('¡Gracias por votar!');
+      setRatings({});
+    }
   };
 
   const addPlayer = () => {
@@ -59,7 +90,7 @@ export default function PlayerRatingWidget() {
   };
 
   const getAverage = (playerId) => {
-    const relevant = history.filter((h) => h.matchId === selectedMatch?.id && h.ratings[playerId]);
+    const relevant = history.filter((h) => h.ratings[playerId]);
     if (!relevant.length) return null;
     const sum = relevant.reduce((acc, curr) => acc + curr.ratings[playerId], 0);
     return (sum / relevant.length).toFixed(1);
